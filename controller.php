@@ -6,6 +6,7 @@ use Concrete\Core\Command\Task\Manager;
 use Concrete\Core\Command\Task\TaskService;
 use Concrete\Core\Command\Task\TaskSetService;
 use Concrete\Core\Entity\Automation\Task;
+use Concrete\Core\Entity\Command\ScheduledTask;
 use Concrete\Core\Entity\Command\TaskProcess;
 use Concrete\Core\Package\Package;
 use Doctrine\ORM\EntityManagerInterface;
@@ -68,10 +69,15 @@ class Controller extends Package
         if ($task) {
             /** @var EntityManagerInterface $entityManager */
             $entityManager = $this->app->make(EntityManagerInterface::class);
-            $repository = $entityManager->getRepository(TaskProcess::class);
-            $taskProcesses = $repository->findBy(['task' => $task]);
+            $taskProcessRepository = $entityManager->getRepository(TaskProcess::class);
+            $taskProcesses = $taskProcessRepository->findBy(['task' => $task]);
             foreach ($taskProcesses as $taskProcess) {
                 $entityManager->remove($taskProcess);
+            }
+            $scheduledTaskRepository = $entityManager->getRepository(ScheduledTask::class);
+            $scheduledTasks = $scheduledTaskRepository->findBy(['task' => $task]);
+            foreach ($scheduledTasks as $scheduledTask) {
+                $entityManager->remove($scheduledTask);
             }
             $entityManager->remove($task);
             $entityManager->flush();
